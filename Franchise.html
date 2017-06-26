@@ -1,0 +1,163 @@
+<!--
+TODO:
+Click on cover image -> show list of episodes
+Don't have everything be in one div somehow so Ican move things
+
+-->
+
+
+<html>
+<link rel="stylesheet" href="../../style.css">
+
+	<div id="test"></div>
+
+	<script>
+	//read in a text file
+	var titles = "a";
+	var allText = "";
+	function readTextFile(file)
+	{
+    	var rawFile = new XMLHttpRequest();
+    	rawFile.open("GET", file, false);
+    	rawFile.onreadystatechange = function ()
+    	{
+    	    if(rawFile.readyState === 4)
+    	    {
+    	        if(rawFile.status === 200 || rawFile.status == 0)
+    	        {
+    	            allText = rawFile.responseText;
+					//document.write(allText);
+    	          //  titles = alltext;
+					//fileDisplayArea.innerText = allText
+    	        }
+    	    }
+    	}
+    	rawFile.send(null);
+	}
+	readTextFile("names.txt");
+
+	//processes the file of titles, returning a list of titles split at newlines
+	function processTitles(lst)
+	{
+		return lst.split("\n");
+	}
+
+
+	/*
+	modifies the parent div of the image clicked on, to expand and show episode list- here nm is 'Media[n]' where [n] is the number of that series and is used to get the div with the episodes to display
+	*/
+	function move(nm)
+	{
+		var tempEle = document.getElementById(nm).parentElement.parentElement;
+		if(tempEle.getAttribute("class").contains("notClicked"))
+		{
+			tempEle.setAttribute("class","clicked");
+			setTimeout(function(){
+				document.getElementById(nm.substring(5)).setAttribute("class","episodesClicked");
+				document.getElementById(nm.substring(5)+"title").setAttribute("class","titleClicked");
+				document.getElementById(nm.substring(5)+"desc").setAttribute("class","descriptionClicked");},1000);
+		}
+		else
+		{
+			tempEle.setAttribute("class","notClicked");
+			document.getElementById(nm.substring(5)).setAttribute("class","episodesNotClicked");
+			document.getElementById(nm.substring(5)+"title").setAttribute("class","titleNotClicked");
+			document.getElementById(nm.substring(5)+"desc").setAttribute("class","descriptionNotClicked");
+		}
+	}
+
+	function openVid(vidName)
+	{
+
+		localStorage.setItem("requestedVid",vidName.split("*").join(" "));
+		window.location = "../../player.html";
+
+	}
+
+
+
+	var titleList = processTitles(allText);
+
+
+	//for each title, add its cover image to the document and create info panels
+	for (i = 0; i < titleList.length-1; i++)
+	{
+		/**
+			elemDiv creates a container div for the image and title/episode list
+		**/
+		elemDiv = document.createElement("div");
+		elemDiv.setAttribute("id","show"+i);
+		elemDiv.setAttribute("class","notClicked");
+		elemDiv.setAttribute("style","display:inline-block; z-index:1; padding: 2px;");
+		//elemDiv.style.marginLeft = '3.125px';
+		//elemDiv.style.marginRight = '3.125px';
+
+
+		/**
+			elem is the image itself
+		**/
+		elem = document.createElement("img");
+		elem.setAttribute("src",titleList[i]+"/cover.jpg");
+		elem.setAttribute("id","Media"+i);
+		elem.setAttribute("class","posterBorder");
+		elem.setAttribute("height","320px");
+		elem.setAttribute("width","225px");
+		elem.setAttribute("align","top");
+		//on click, call move() to expand the box to show deets
+		elem.setAttribute("onclick","move('Media"+i+"')");
+
+		imgParentDiv = document.createElement("div");
+		imgParentDiv.setAttribute("class","imgBorder");
+
+		/**
+			container is the title
+		**/
+		titleDiv = document.createElement("h1");
+		titleDiv.setAttribute("id",i+"title");
+		titleDiv.innerHTML = "  "+titleList[i].split("_")[1];//.split("_").join(" ");
+		titleDiv.setAttribute("class","titleNotClicked");
+
+
+		description = document.createElement("div");
+		description.setAttribute("id",i+"desc");
+		description.setAttribute("class","descriptionNotClicked");
+		readTextFile(titleList[i]+"/"+"desc.txt");
+		description.innerHTML = allText;
+
+
+		/**
+			container is the div containing the episode list
+		**/
+		container = document.createElement("div");
+		container.setAttribute("id",i);
+		container.setAttribute("class","episodesNotClicked");
+
+		//read in the mkv file list from the folder of the current media
+		readTextFile(titleList[i]+"/"+titleList[i].split("_")[1]+".txt");
+		var epList = processTitles(allText);
+		var tempNm = localStorage.getItem("franName");
+		for(j =0; j < epList.length-1;j++)
+		{
+			//add file to html- TODO add in browser player
+container.innerHTML += "<span onclick=openVid('Media/"+tempNm.split(' ').join('*')+"/"+titleList[i].split(' ').join('*')+"/"+epList[j].split(" ").join("*")+"');>"+epList[j].substring(0,epList[j].length-4).split("_").join(" ")+"</span></br>";
+		}
+		container.innerHTML+="</br>";
+
+		//adds the div for each media to test, which contains all, and appropriately attaches child elements
+		document.getElementById("test").appendChild(elemDiv).appendChild(imgParentDiv).appendChild(elem);
+		document.getElementById("show"+i).appendChild(titleDiv);
+		document.getElementById("show"+i).appendChild(description);
+		document.getElementById("show"+i).appendChild(container);
+	}
+
+
+
+
+	</script>
+
+
+
+
+
+
+</html>
